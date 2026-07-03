@@ -221,15 +221,15 @@ pip install -r requirements-multimodal.txt
 
 主入口文件是：
 
-- `[main.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/main.py:1)`
+- [main.py](./main.py)
 
 配置定义见：
 
-- `[_conf_schema.json](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/_conf_schema.json:1)`
+- [_conf_schema.json](./_conf_schema.json)
 
 元数据见：
 
-- `[metadata.yaml](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/metadata.yaml:1)`
+- [metadata.yaml](./metadata.yaml)
 
 ### 5. 最小可用配置
 
@@ -412,8 +412,8 @@ x-access-token: your-token
 
 如果你是把它当成上层副本系统的记忆后端来用，优先建议直接复用：
 
-- `[api/gateway.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/api/gateway.py:1)`
-- `[core/memory_system.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/core/memory_system.py:1)`
+- [api/gateway.py](./api/gateway.py)
+- [core/memory_system.py](./core/memory_system.py)
 
 ---
 
@@ -444,7 +444,7 @@ x-access-token: your-token
 
 已有文本记忆迁移到多模态索引时，可以使用：
 
-- `[scripts/migrate_to_multimodal.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/scripts/migrate_to_multimodal.py:1)`
+- [scripts/migrate_to_multimodal.py](./scripts/migrate_to_multimodal.py)
 
 ---
 
@@ -503,8 +503,8 @@ Infinite-Genre-Instance-Dungeons/
 
 详细设计文档见：
 
-- `[docs/无限流副本生成：关键词联想驱动的连续剧情系统.md](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/docs/%E6%97%A0%E9%99%90%E6%B5%81%E5%89%AF%E6%9C%AC%E7%94%9F%E6%88%90%EF%BC%9A%E5%85%B3%E9%94%AE%E8%AF%8D%E8%81%94%E6%83%B3%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%BF%9E%E7%BB%AD%E5%89%A7%E6%83%85%E7%B3%BB%E7%BB%9F.md:1)`
-- `[docs/无限流副本参考图融合生图方案.md](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/docs/%E6%97%A0%E9%99%90%E6%B5%81%E5%89%AF%E6%9C%AC%E5%8F%82%E8%80%83%E5%9B%BE%E8%9E%8D%E5%90%88%E7%94%9F%E5%9B%BE%E6%96%B9%E6%A1%88.md:1)`
+- [docs/无限流副本生成：关键词联想驱动的连续剧情系统.md](./docs/无限流副本生成：关键词联想驱动的连续剧情系统.md)
+- [docs/无限流副本参考图融合生图方案.md](./docs/无限流副本参考图融合生图方案.md)
 
 ---
 
@@ -574,15 +574,15 @@ python -m tests.test_multimodal_e2e
 
 ## 关键文件
 
-- `[main.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/main.py:1)`：运行时入口
-- `[core/memory_system.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/core/memory_system.py:1)`：记忆系统主逻辑
-- `[core/memory_graph.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/core/memory_graph.py:1)`：记忆图谱
-- `[intelligence/topic_analyzer.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/intelligence/topic_analyzer.py:1)`：话题驱动记忆形成
-- `[intelligence/temporal.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/intelligence/temporal.py:1)`：时间维度记忆
-- `[memory/memory_recall.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/memory/memory_recall.py:1)`：增强召回
-- `[web/server.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/web/server.py:1)`：Web 管理界面
-- `[api/gateway.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/api/gateway.py:1)`：内部 API 网关
-- `[scripts/migrate_to_multimodal.py](/Users/kaori/Documents/gitrepo/Infinite-Genre-Instance-Dungeons/scripts/migrate_to_multimodal.py:1)`：多模态迁移脚本
+- [main.py](./main.py)：运行时入口
+- [core/memory_system.py](./core/memory_system.py)：记忆系统主逻辑
+- [core/memory_graph.py](./core/memory_graph.py)：记忆图谱
+- [intelligence/topic_analyzer.py](./intelligence/topic_analyzer.py)：话题驱动记忆形成
+- [intelligence/temporal.py](./intelligence/temporal.py)：时间维度记忆
+- [memory/memory_recall.py](./memory/memory_recall.py)：增强召回
+- [web/server.py](./web/server.py)：Web 管理界面
+- [api/gateway.py](./api/gateway.py)：内部 API 网关
+- [scripts/migrate_to_multimodal.py](./scripts/migrate_to_multimodal.py)：多模态迁移脚本
 
 ---
 
