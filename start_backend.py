@@ -68,6 +68,83 @@ def init_db():
         updated_at REAL
     )''')
 
+    # 副本工作流表
+    cur.execute('''CREATE TABLE IF NOT EXISTS playthroughs (
+        id TEXT PRIMARY KEY,
+        playthrough_number INTEGER NOT NULL,
+        status TEXT DEFAULT 'active',
+        route TEXT,
+        started_at REAL,
+        completed_at REAL,
+        ending TEXT,
+        summary TEXT,
+        created_at REAL,
+        updated_at REAL
+    )''')
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS scenes (
+        id TEXT PRIMARY KEY,
+        playthrough_id TEXT NOT NULL,
+        chapter TEXT NOT NULL,
+        scene_number TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        status TEXT DEFAULT 'locked',
+        progress INTEGER DEFAULT 0,
+        sort_order INTEGER DEFAULT 0,
+        created_at REAL,
+        updated_at REAL,
+        FOREIGN KEY (playthrough_id) REFERENCES playthroughs(id)
+    )''')
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS attributes (
+        id TEXT PRIMARY KEY,
+        playthrough_id TEXT NOT NULL,
+        attribute_name TEXT NOT NULL,
+        attribute_value REAL DEFAULT 0,
+        max_value REAL DEFAULT 100,
+        min_value REAL DEFAULT 0,
+        category TEXT,
+        icon TEXT,
+        created_at REAL,
+        updated_at REAL,
+        FOREIGN KEY (playthrough_id) REFERENCES playthroughs(id)
+    )''')
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS saves (
+        id TEXT PRIMARY KEY,
+        playthrough_id TEXT NOT NULL,
+        save_type TEXT DEFAULT 'auto',
+        save_name TEXT,
+        save_data TEXT NOT NULL,
+        created_at REAL,
+        file_size INTEGER,
+        version TEXT DEFAULT '1.0',
+        checksum TEXT,
+        FOREIGN KEY (playthrough_id) REFERENCES playthroughs(id)
+    )''')
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS cross_playthrough_memories (
+        id TEXT PRIMARY KEY,
+        memory_content TEXT NOT NULL,
+        memory_type TEXT,
+        discovered_at REAL,
+        playthrough_id TEXT,
+        related_scene_id TEXT,
+        importance REAL DEFAULT 0.5,
+        FOREIGN KEY (playthrough_id) REFERENCES playthroughs(id)
+    )''')
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS unlocked_endings (
+        id TEXT PRIMARY KEY,
+        ending_name TEXT NOT NULL,
+        ending_description TEXT,
+        unlocked_at REAL,
+        playthrough_id TEXT,
+        ending_data TEXT,
+        FOREIGN KEY (playthrough_id) REFERENCES playthroughs(id)
+    )''')
+
     # 检查是否已有数据
     cur.execute("SELECT COUNT(*) FROM concepts")
     if cur.fetchone()[0] > 0:
@@ -217,6 +294,113 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
             edges_raw = self.query_db("SELECT id, from_concept, to_concept, strength FROM connections")
             edges = [{"id": e["id"], "from_concept": e["from_concept"], "to_concept": e["to_concept"], "strength": e["strength"]} for e in edges_raw]
             self.send_json({"nodes": nodes, "edges": edges})
+
+        # 副本工作流 API
+        elif path == "/api/playthroughs":
+            playthroughs = self.query_db("SELECT * FROM playthroughs ORDER BY playthrough_number DESC")
+            self.send_json({"playthroughs": playthroughs})
+
+        elif path == "/api/playthroughs/current":
+            pt = self.query_db("SELECT * FROM playthroughs WHERE status = 'active' ORDER BY playthrough_number DESC LIMIT 1")
+            if pt:
+                self.send_json(pt[0])
+            else:
+                self.send_json({})
+
+        elif path.startswith("/api/scenes") and "timeline" in path:
+            pt_id = path.split("/")[-1]
+            scenes = self.query_db("SELECT * FROM scenes WHERE playthrough_id = ? ORDER BY sort_order", (pt_id,))
+            chapters = {}
+            for s in scenes:
+                ch = s["chapter"]
+                if ch not in chapters:
+                    chapters[ch] = {"chapter_name": ch, "scenes": [], "total_scenes": 0, "completed_scenes": 0}
+                chapters[ch]["scenes"].append(s)
+                chapters[ch]["total_scenes"] += 1
+                if s["status"] == "completed":
+                    chapters[ch]["completed_scenes"] += 1
+            total = len(scenes)
+            completed = sum(1 for s in scenes if s["status"] == "completed")
+            self.send_json({
+                "chapters": list(chapters.values()),
+                "summary": {"total_scenes": total, "completed_scenes": completed, "active_scenes": total - completed, "progress": (completed / total * 100) if total > 0 else 0}
+            })
+
+        elif path == "/api/scenes":
+            pt_id = params.get("playthrough_id", [""])[0]
+            if pt_id:
+                scenes = self.query_db("SELECT * FROM scenes WHERE playthrough_id = ? ORDER BY sort_order", (pt_id,))
+            else:
+                scenes = self.query_db("SELECT * FROM scenes ORDER BY sort_order")
+            self.send_json({"scenes": scenes})
+
+        elif path == "/api/attributes":
+            pt_id = params.get("playthrough_id", [""])[0]
+            if pt_id:
+                attrs = self.query_db("SELECT * FROM attributes WHERE playthrough_id = ?", (pt_id,))
+            else:
+                attrs = self.query_db("SELECT * FROM attributes")
+            self.send_json({"attributes": attrs})
+
+        elif path.startswith("/api/attributes/") and "history" in path:
+            attr_id = path.split("/")[-2]
+            self.send_json({"history": []})
+
+        elif path.startswith("/api/attributes/panel/"):
+            pt_id = path.split("/")[-1]
+            attrs = self.query_db("SELECT * FROM attributes WHERE playthrough_id = ?", (pt_id,))
+            categories = {}
+            for a in attrs:
+                cat = a.get("category", "other") or "other"
+                if cat not in categories:
+                    categories[cat] = []
+                categories[cat].append(a)
+            self.send_json({"categories": categories})
+
+        elif path == "/api/saves":
+            pt_id = params.get("playthrough_id", [""])[0]
+            if pt_id:
+                saves = self.query_db("SELECT id, playthrough_id, save_type, save_name, created_at, file_size, version FROM saves WHERE playthrough_id = ?", (pt_id,))
+            else:
+                saves = self.query_db("SELECT id, playthrough_id, save_type, save_name, created_at, file_size, version FROM saves")
+            self.send_json({"saves": saves})
+
+        elif path.startswith("/api/saves/") and "export" in path:
+            save_id = path.split("/")[-2]
+            self.send_json({"export_data": "test_export"})
+
+        elif path == "/api/saves/import":
+            self.send_json({"id": "imported", "save_name": "导入存档"})
+
+        elif path == "/api/recall":
+            pt_id = params.get("playthrough_id", [""])[0]
+            pt = self.query_db("SELECT * FROM playthroughs WHERE id = ?", (pt_id,))
+            memories = self.query_db("SELECT * FROM cross_playthrough_memories WHERE playthrough_id = ?", (pt_id,))
+            endings = self.query_db("SELECT * FROM unlocked_endings")
+            self.send_json({
+                "current_playthrough": pt[0] if pt else {},
+                "memories": memories,
+                "endings": endings
+            })
+
+        elif path == "/api/recall/memories":
+            self.send_json({"id": "memory_" + str(uuid.uuid4())[:8]})
+
+        elif path == "/api/recall/endings":
+            endings = self.query_db("SELECT * FROM unlocked_endings")
+            self.send_json({"endings": endings})
+
+        elif path == "/api/recall/destiny-map":
+            pts = self.query_db("SELECT * FROM playthroughs ORDER BY playthrough_number")
+            endings = self.query_db("SELECT * FROM unlocked_endings")
+            memories = self.query_db("SELECT * FROM cross_playthrough_memories")
+            self.send_json({
+                "playthroughs": pts,
+                "endings": endings,
+                "memories": memories,
+                "summary": {"total_playthroughs": len(pts), "completed_playthroughs": sum(1 for p in pts if p["status"] == "completed"), "unlocked_endings": len(endings), "total_memories": len(memories)}
+            })
+
         else:
             self.send_error(404)
 
@@ -247,6 +431,66 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
                 (imp_id, body.get("person_name", ""), body.get("score", 50), body.get("tags", ""), body.get("notes", ""), time.time(), time.time()),
             )
             self.send_json({"id": imp_id})
+
+        # 副本工作流 POST API
+        elif path == "/api/playthroughs":
+            pt_id = f"pt_{uuid.uuid4().hex[:12]}"
+            # 获取下一个周目编号
+            result = self.query_db("SELECT MAX(playthrough_number) as max_num FROM playthroughs")
+            next_num = (result[0]["max_num"] or 0) + 1 if result else 1
+            now = time.time()
+            self.execute_db(
+                "INSERT INTO playthroughs (id, playthrough_number, status, route, started_at, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
+                (pt_id, next_num, "active", body.get("route"), now, now, now),
+            )
+            self.send_json({"id": pt_id, "number": next_num, "status": "active", "route": body.get("route")})
+
+        elif path == "/api/scenes":
+            scene_id = f"scene_{uuid.uuid4().hex[:12]}"
+            now = time.time()
+            self.execute_db(
+                "INSERT INTO scenes (id, playthrough_id, chapter, scene_number, name, description, status, progress, sort_order, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (scene_id, body.get("playthrough_id"), body.get("chapter"), body.get("scene_number"), body.get("name"), body.get("description", ""), "locked", 0, body.get("sort_order", 0), now, now),
+            )
+            self.send_json({"id": scene_id, "name": body.get("name")})
+
+        elif path == "/api/attributes":
+            attr_id = f"attr_{uuid.uuid4().hex[:12]}"
+            now = time.time()
+            self.execute_db(
+                "INSERT INTO attributes (id, playthrough_id, attribute_name, attribute_value, max_value, min_value, category, icon, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (attr_id, body.get("playthrough_id"), body.get("name"), body.get("initial_value", 0), body.get("max_value", 100), body.get("min_value", 0), body.get("category", "other"), body.get("icon"), now, now),
+            )
+            self.send_json({"id": attr_id, "name": body.get("name"), "value": body.get("initial_value", 0)})
+
+        elif path == "/api/saves":
+            save_id = f"save_{uuid.uuid4().hex[:12]}"
+            now = time.time()
+            save_data = json.dumps(body.get("save_data", {}))
+            self.execute_db(
+                "INSERT INTO saves (id, playthrough_id, save_type, save_name, save_data, created_at, file_size, version, checksum) VALUES (?,?,?,?,?,?,?,?,?)",
+                (save_id, body.get("playthrough_id"), body.get("save_type", "manual"), body.get("save_name"), save_data, now, len(save_data), "1.0", ""),
+            )
+            self.send_json({"id": save_id, "save_name": body.get("save_name")})
+
+        elif path == "/api/recall/memories":
+            memory_id = f"mem_{uuid.uuid4().hex[:12]}"
+            now = time.time()
+            self.execute_db(
+                "INSERT INTO cross_playthrough_memories (id, memory_content, memory_type, discovered_at, playthrough_id, importance) VALUES (?,?,?,?,?,?)",
+                (memory_id, body.get("memory_content"), body.get("memory_type", "memory"), now, body.get("playthrough_id"), body.get("importance", 0.5)),
+            )
+            self.send_json({"id": memory_id})
+
+        elif path == "/api/recall/endings":
+            ending_id = f"ending_{uuid.uuid4().hex[:12]}"
+            now = time.time()
+            self.execute_db(
+                "INSERT INTO unlocked_endings (id, ending_name, ending_description, unlocked_at, playthrough_id) VALUES (?,?,?,?,?)",
+                (ending_id, body.get("ending_name"), body.get("ending_description", ""), now, body.get("playthrough_id")),
+            )
+            self.send_json({"status": "unlocked", "ending_id": ending_id})
+
         else:
             self.send_error(404)
 
@@ -273,9 +517,46 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
+
+    def do_PUT(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(content_length)) if content_length > 0 else {}
+
+        if path.startswith("/api/scenes/") and "progress" in path:
+            scene_id = path.split("/")[-2]
+            progress = body.get("progress", 0)
+            status = "completed" if progress >= 100 else "active"
+            self.execute_db("UPDATE scenes SET progress = ?, status = ?, updated_at = ? WHERE id = ?", (progress, status, time.time(), scene_id))
+            self.send_json({"id": scene_id, "progress": progress, "status": status})
+
+        elif path.startswith("/api/attributes/"):
+            attr_id = path.split("/")[-2]
+            delta = body.get("delta", 0)
+            # 获取当前值
+            result = self.query_db("SELECT attribute_value, min_value, max_value FROM attributes WHERE id = ?", (attr_id,))
+            if result:
+                current = result[0]["attribute_value"]
+                min_val = result[0]["min_value"]
+                max_val = result[0]["max_value"]
+                new_value = max(min_val, min(max_val, current + delta))
+                self.execute_db("UPDATE attributes SET attribute_value = ?, updated_at = ? WHERE id = ?", (new_value, time.time(), attr_id))
+                self.send_json({"id": attr_id, "value": new_value})
+            else:
+                self.send_error(404)
+
+        elif path.startswith("/api/saves/"):
+            save_id = path.split("/")[-2]
+            save_data = json.dumps(body.get("save_data", {}))
+            self.execute_db("UPDATE saves SET save_data = ?, file_size = ? WHERE id = ?", (save_data, len(save_data), save_id))
+            self.send_json({"id": save_id})
+
+        else:
+            self.send_error(404)
 
     def query_db(self, sql, params=()):
         conn = sqlite3.connect(DB_PATH)
