@@ -39,8 +39,8 @@ body {
 /* Layout */
 .app-container {
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr var(--right-panel-width);
-  grid-template-rows: var(--header-height) 1fr;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: 60px 1fr;
   height: 100vh;
   width: 100vw;
 }
@@ -119,6 +119,7 @@ body {
 
 /* Right Panel */
 .app-right-panel {
+  grid-column: 3;
   grid-row: 2;
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: saturate(180%) blur(20px);

@@ -89,12 +89,11 @@ const SceneTimeline = {
 
   init() {
     this.container = document.getElementById('sceneTimeline');
-    if (this.container) {
-      this.render();
-    }
   },
 
   async render() {
+    if (!this.container) return;
+
     if (!DungeonStore.currentPlaythrough) {
       this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
       return;
@@ -198,7 +197,7 @@ const SceneTimeline = {
         </div>
       `;
 
-      UI.showPanel(`场景详情`, content, `
+      DungeonUI.showPanel(`场景详情`, content, `
         <button onclick="SceneTimeline.completeScene('${sceneId}')">完成场景</button>
       `);
     } catch (e) {
@@ -218,7 +217,7 @@ const SceneTimeline = {
   async completeScene(sceneId) {
     try {
       await API.put(`/api/scenes/${sceneId}/progress`, { progress: 100 });
-      UI.hidePanel();
+      DungeonUI.hidePanel();
       this.render();
     } catch (e) {
       console.error('完成场景失败:', e);
@@ -234,12 +233,11 @@ const AttributePanel = {
 
   init() {
     this.container = document.getElementById('attributePanel');
-    if (this.container) {
-      this.render();
-    }
   },
 
   async render() {
+    if (!this.container) return;
+
     if (!DungeonStore.currentPlaythrough) {
       this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
       return;
@@ -324,7 +322,7 @@ const AttributePanel = {
         </div>
       `;
 
-      UI.showPanel(`${attr.name} 历史`, content, '');
+      DungeonUI.showPanel(`${attr.name} 历史`, content, '');
     } catch (e) {
       console.error('获取属性历史失败:', e);
     }
@@ -357,7 +355,7 @@ const AttributePanel = {
       </div>
     `;
 
-    UI.showPanel('添加属性', content, `
+    DungeonUI.showPanel('添加属性', content, `
       <button onclick="AttributePanel.createAttribute()">创建</button>
     `);
   },
@@ -381,7 +379,7 @@ const AttributePanel = {
         max_value: maxValue,
         category
       });
-      UI.hidePanel();
+      DungeonUI.hidePanel();
       this.render();
     } catch (e) {
       console.error('创建属性失败:', e);
@@ -397,12 +395,11 @@ const RecallSystem = {
 
   init() {
     this.container = document.getElementById('recallPanel');
-    if (this.container) {
-      this.render();
-    }
   },
 
   async render() {
+    if (!this.container) return;
+
     if (!DungeonStore.currentPlaythrough) {
       this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
       return;
@@ -551,12 +548,11 @@ const SaveManager = {
 
   init() {
     this.container = document.getElementById('savePanel');
-    if (this.container) {
-      this.render();
-    }
   },
 
   async render() {
+    if (!this.container) return;
+
     if (!DungeonStore.currentPlaythrough) {
       this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
       return;
@@ -702,12 +698,11 @@ const PlaythroughManager = {
 
   init() {
     this.container = document.getElementById('playthroughPanel');
-    if (this.container) {
-      this.render();
-    }
   },
 
   async render() {
+    if (!this.container) return;
+
     await DungeonStore.loadPlaythroughs();
 
     let html = `
@@ -725,7 +720,7 @@ const PlaythroughManager = {
         const isActive = DungeonStore.currentPlaythrough && DungeonStore.currentPlaythrough.id === pt.id;
         html += `
           <div class="playthrough-item ${isActive ? 'active' : ''}" data-pt-id="${pt.id}">
-            <div class="pt-number">第${pt.number}周目</div>
+            <div class="pt-number">第${pt.playthrough_number || pt.number}周目</div>
             <div class="pt-info">
               <span class="pt-route">${pt.route || '默认路线'}</span>
               <span class="pt-status ${pt.status}">${this.getStatusText(pt.status)}</span>
@@ -790,7 +785,7 @@ const PlaythroughManager = {
 /* ============================================
  * UI工具函数
  * ============================================ */
-const UI = {
+const DungeonUI = {
   showPanel(title, content, footer) {
     const panel = document.getElementById('sidePanel');
     const panelTitle = document.getElementById('panelTitle');
@@ -810,9 +805,60 @@ const UI = {
 };
 
 /* ============================================
+ * 标签页切换管理
+ * ============================================ */
+const TabManager = {
+  currentTab: 'workflows',
+
+  init() {
+    // 监听标签页切换
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const tabName = e.target.dataset.tab;
+        this.switchTab(tabName);
+      });
+    });
+  },
+
+  async switchTab(tabName) {
+    this.currentTab = tabName;
+
+    // 更新标签状态
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+
+    // 切换内容显示
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(`tab-${tabName}`)?.classList.remove('hidden');
+
+    // 如果切换到副本标签，触发数据加载和渲染
+    if (tabName === 'workflows') {
+      await this.loadWorkflowData();
+    }
+  },
+
+  async loadWorkflowData() {
+    // 加载周目数据
+    await DungeonStore.loadPlaythroughs();
+    await DungeonStore.loadCurrentPlaythrough();
+
+    // 渲染所有组件
+    PlaythroughManager.render();
+    SceneTimeline.render();
+    AttributePanel.render();
+    RecallSystem.render();
+    SaveManager.render();
+  }
+};
+
+/* ============================================
  * 初始化
  * ============================================ */
 document.addEventListener('DOMContentLoaded', async () => {
+  // 初始化标签页管理
+  TabManager.init();
+
   // 初始化副本工作流模块
   await DungeonStore.init();
 
@@ -822,4 +868,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   AttributePanel.init();
   RecallSystem.init();
   SaveManager.init();
+
+  // 如果当前是副本标签，加载数据
+  if (TabManager.currentTab === 'workflows') {
+    await TabManager.loadWorkflowData();
+  }
 });
