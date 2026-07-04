@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Memora Connect</title>
+  <title>Memora Connect - 副本工作流</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/dungeon.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 </head>
@@ -16,7 +17,7 @@
         <div class="brand-icon"></div>
         <span>Memora Connect</span>
       </div>
-      
+
       <div class="search-bar">
         <i class="fa-solid fa-search search-icon"></i>
         <input type="text" id="globalSearch" placeholder="搜索记忆、概念、人物...">
@@ -32,13 +33,19 @@
     <!-- Sidebar -->
     <aside class="app-sidebar">
       <div class="tabs">
-        <button class="tab-btn active" data-tab="concepts">概念</button>
+        <button class="tab-btn active" data-tab="workflows">副本</button>
+        <button class="tab-btn" data-tab="concepts">概念</button>
         <button class="tab-btn" data-tab="memories">记忆</button>
         <button class="tab-btn" data-tab="impressions">印象</button>
       </div>
 
+      <!-- 副本工作流 Tab -->
+      <div id="tab-workflows" class="tab-content">
+        <div id="playthroughPanel"></div>
+      </div>
+
       <!-- Concepts Tab -->
-      <div id="tab-concepts" class="tab-content">
+      <div id="tab-concepts" class="tab-content hidden">
         <div class="flex-row mb-2">
           <input type="text" id="newConceptName" placeholder="新概念名称" class="full-width">
           <button id="addConceptBtn" class="icon-btn"><i class="fa-solid fa-plus"></i></button>
@@ -62,11 +69,27 @@
 
     <!-- Main Content -->
     <main class="app-main">
+      <!-- 场景时间线 -->
+      <div id="sceneTimeline" class="main-section"></div>
+
+      <!-- 图谱区域 -->
       <div id="graph"></div>
-      
+
       <!-- Context Menu -->
       <div id="contextMenu" class="context-menu"></div>
     </main>
+
+    <!-- Right Panel -->
+    <aside class="app-right-panel">
+      <!-- 属性面板 -->
+      <div id="attributePanel" class="right-section"></div>
+
+      <!-- 回忆系统 -->
+      <div id="recallPanel" class="right-section"></div>
+
+      <!-- 存档管理 -->
+      <div id="savePanel" class="right-section"></div>
+    </aside>
   </div>
 
   <!-- Floating Panel (Details / Edit) -->
@@ -83,7 +106,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal (hidden by default, maybe reuse panel or create modal) -->
+  <!-- Settings Modal -->
   <dialog id="settingsDialog" style="padding: 20px; border-radius: 12px; border: 1px solid #ccc;">
     <h3>设置</h3>
     <label>访问令牌: <input type="password" id="tokenInput" class="full-width mt-2"></label>
@@ -93,5 +116,6 @@
   </dialog>
 
   <script src="/static/app.js"></script>
+  <script src="/static/dungeon.js"></script>
 </body>
 </html>

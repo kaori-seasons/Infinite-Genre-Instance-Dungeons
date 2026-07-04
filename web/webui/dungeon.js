@@ -1,0 +1,825 @@
+/**
+ * 副本工作流前端模块
+ * 实现场景时间线、属性面板、回忆系统、存档管理
+ */
+
+/* ============================================
+ * 副本工作流状态管理
+ * ============================================ */
+const DungeonStore = {
+  currentPlaythrough: null,
+  playthroughs: [],
+  scenes: [],
+  attributes: [],
+  saves: [],
+  recallData: null,
+  destinyMap: null,
+
+  async init() {
+    await this.loadCurrentPlaythrough();
+    await this.loadPlaythroughs();
+  },
+
+  async loadCurrentPlaythrough() {
+    try {
+      this.currentPlaythrough = await API.get('/api/playthroughs/current');
+    } catch (e) {
+      this.currentPlaythrough = null;
+    }
+  },
+
+  async loadPlaythroughs() {
+    try {
+      const data = await API.get('/api/playthroughs');
+      this.playthroughs = data.playthroughs || [];
+    } catch (e) {
+      this.playthroughs = [];
+    }
+  },
+
+  async loadScenes(playthroughId) {
+    try {
+      const data = await API.get(`/api/scenes?playthrough_id=${playthroughId}`);
+      this.scenes = data.scenes || [];
+    } catch (e) {
+      this.scenes = [];
+    }
+  },
+
+  async loadAttributes(playthroughId) {
+    try {
+      const data = await API.get(`/api/attributes?playthrough_id=${playthroughId}`);
+      this.attributes = data.attributes || [];
+    } catch (e) {
+      this.attributes = [];
+    }
+  },
+
+  async loadSaves(playthroughId) {
+    try {
+      const data = await API.get(`/api/saves?playthrough_id=${playthroughId}`);
+      this.saves = data.saves || [];
+    } catch (e) {
+      this.saves = [];
+    }
+  },
+
+  async loadRecall(playthroughId) {
+    try {
+      this.recallData = await API.get(`/api/recall?playthrough_id=${playthroughId}`);
+    } catch (e) {
+      this.recallData = null;
+    }
+  },
+
+  async loadDestinyMap() {
+    try {
+      this.destinyMap = await API.get('/api/recall/destiny-map');
+    } catch (e) {
+      this.destinyMap = null;
+    }
+  }
+};
+
+/* ============================================
+ * 场景时间线组件
+ * ============================================ */
+const SceneTimeline = {
+  container: null,
+
+  init() {
+    this.container = document.getElementById('sceneTimeline');
+    if (this.container) {
+      this.render();
+    }
+  },
+
+  async render() {
+    if (!DungeonStore.currentPlaythrough) {
+      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      return;
+    }
+
+    await DungeonStore.loadScenes(DungeonStore.currentPlaythrough.id);
+
+    const timeline = await API.get(`/api/scenes/timeline/${DungeonStore.currentPlaythrough.id}`);
+
+    let html = `
+      <div class="timeline-header">
+        <h3>场景时间线</h3>
+        <div class="timeline-stats">
+          <span class="stat">总场景: ${timeline.summary.total_scenes}</span>
+          <span class="stat completed">已完成: ${timeline.summary.completed_scenes}</span>
+          <span class="stat active">进行中: ${timeline.summary.active_scenes}</span>
+        </div>
+      </div>
+      <div class="timeline-progress">
+        <div class="progress-bar" style="width: ${timeline.summary.progress}%"></div>
+      </div>
+      <div class="timeline-chapters">
+    `;
+
+    for (const chapter of timeline.chapters) {
+      html += `
+        <div class="chapter-group">
+          <div class="chapter-header">
+            <span class="chapter-name">${chapter.chapter_name}</span>
+            <span class="chapter-stats">${chapter.completed_scenes}/${chapter.total_scenes}</span>
+          </div>
+          <div class="chapter-scenes">
+      `;
+
+      for (const scene of chapter.scenes) {
+        const statusClass = scene.status === 'completed' ? 'completed' :
+                           scene.status === 'active' ? 'active' : 'locked';
+        html += `
+          <div class="scene-item ${statusClass}" data-scene-id="${scene.id}">
+            <div class="scene-number">${scene.scene_number}</div>
+            <div class="scene-info">
+              <div class="scene-name">${scene.name}</div>
+              <div class="scene-progress">
+                <div class="progress-mini" style="width: ${scene.progress}%"></div>
+              </div>
+            </div>
+            <div class="scene-status">
+              ${scene.status === 'completed' ? '✓' : scene.status === 'active' ? '▶' : '🔒'}
+            </div>
+          </div>
+        `;
+      }
+
+      html += `
+          </div>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    this.container.innerHTML = html;
+
+    // 绑定事件
+    this.bindEvents();
+  },
+
+  bindEvents() {
+    const sceneItems = this.container.querySelectorAll('.scene-item');
+    sceneItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const sceneId = item.dataset.sceneId;
+        this.showSceneDetail(sceneId);
+      });
+    });
+  },
+
+  async showSceneDetail(sceneId) {
+    try {
+      const scene = await API.get(`/api/scenes/${sceneId}`);
+      const events = await API.get(`/api/scenes/${sceneId}/events`);
+
+      const content = `
+        <div class="scene-detail">
+          <h4>${scene.chapter} - ${scene.scene_number} ${scene.name}</h4>
+          <p class="description">${scene.description || '暂无描述'}</p>
+          <div class="scene-meta">
+            <span class="status ${scene.status}">${this.getStatusText(scene.status)}</span>
+            <span class="progress">进度: ${scene.progress}%</span>
+          </div>
+          <div class="scene-events">
+            <h5>场景事件</h5>
+            <div class="events-list">
+              ${(events.events || []).map(e => `
+                <div class="event-item">
+                  <span class="event-type">${e.event_type}</span>
+                  <span class="event-content">${e.event_content}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      UI.showPanel(`场景详情`, content, `
+        <button onclick="SceneTimeline.completeScene('${sceneId}')">完成场景</button>
+      `);
+    } catch (e) {
+      console.error('获取场景详情失败:', e);
+    }
+  },
+
+  getStatusText(status) {
+    const statusMap = {
+      'locked': '🔒 未解锁',
+      'active': '▶ 进行中',
+      'completed': '✓ 已完成'
+    };
+    return statusMap[status] || status;
+  },
+
+  async completeScene(sceneId) {
+    try {
+      await API.put(`/api/scenes/${sceneId}/progress`, { progress: 100 });
+      UI.hidePanel();
+      this.render();
+    } catch (e) {
+      console.error('完成场景失败:', e);
+    }
+  }
+};
+
+/* ============================================
+ * 属性面板组件
+ * ============================================ */
+const AttributePanel = {
+  container: null,
+
+  init() {
+    this.container = document.getElementById('attributePanel');
+    if (this.container) {
+      this.render();
+    }
+  },
+
+  async render() {
+    if (!DungeonStore.currentPlaythrough) {
+      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      return;
+    }
+
+    await DungeonStore.loadAttributes(DungeonStore.currentPlaythrough.id);
+
+    let html = `
+      <div class="panel-header">
+        <h3>属性面板</h3>
+        <button class="btn-add" onclick="AttributePanel.showAddAttribute()">+ 添加属性</button>
+      </div>
+      <div class="attributes-grid">
+    `;
+
+    for (const attr of DungeonStore.attributes) {
+      html += `
+        <div class="attribute-card" data-attr-id="${attr.id}">
+          <div class="attr-icon">${attr.icon || '📊'}</div>
+          <div class="attr-info">
+            <div class="attr-name">${attr.name}</div>
+            <div class="attr-value">${attr.value.toFixed(1)}</div>
+            <div class="attr-bar">
+              <div class="attr-fill" style="width: ${attr.percentage}%"></div>
+            </div>
+            <div class="attr-range">${attr.min_value} - ${attr.max_value}</div>
+          </div>
+          <div class="attr-actions">
+            <button class="btn-small" onclick="AttributePanel.adjustValue('${attr.id}', -10)">-</button>
+            <button class="btn-small" onclick="AttributePanel.adjustValue('${attr.id}', 10)">+</button>
+          </div>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    this.container.innerHTML = html;
+
+    // 绑定事件
+    this.bindEvents();
+  },
+
+  bindEvents() {
+    const attrCards = this.container.querySelectorAll('.attribute-card');
+    attrCards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('btn-small')) {
+          const attrId = card.dataset.attrId;
+          this.showAttributeHistory(attrId);
+        }
+      });
+    });
+  },
+
+  async adjustValue(attrId, delta) {
+    try {
+      const reason = delta > 0 ? '增加' : '减少';
+      await API.put(`/api/attributes/${attrId}`, { delta, reason });
+      this.render();
+    } catch (e) {
+      console.error('调整属性值失败:', e);
+    }
+  },
+
+  async showAttributeHistory(attrId) {
+    try {
+      const data = await API.get(`/api/attributes/${attrId}/history`);
+      const attr = DungeonStore.attributes.find(a => a.id === attrId);
+
+      const content = `
+        <div class="attr-history">
+          <h4>${attr.name} 变化历史</h4>
+          <div class="history-list">
+            ${(data.history || []).map(h => `
+              <div class="history-item">
+                <span class="history-time">${new Date(h.changed_at * 1000).toLocaleString()}</span>
+                <span class="history-change">${h.old_value} → ${h.new_value}</span>
+                <span class="history-reason">${h.change_reason || ''}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      UI.showPanel(`${attr.name} 历史`, content, '');
+    } catch (e) {
+      console.error('获取属性历史失败:', e);
+    }
+  },
+
+  showAddAttribute() {
+    const content = `
+      <div class="add-attribute-form">
+        <div class="form-group">
+          <label>属性名称</label>
+          <input type="text" id="newAttrName" placeholder="如: 狐族信任">
+        </div>
+        <div class="form-group">
+          <label>初始值</label>
+          <input type="number" id="newAttrValue" value="0">
+        </div>
+        <div class="form-group">
+          <label>最大值</label>
+          <input type="number" id="newAttrMax" value="100">
+        </div>
+        <div class="form-group">
+          <label>分类</label>
+          <select id="newAttrCategory">
+            <option value="trust">信任类</option>
+            <option value="corruption">侵蚀类</option>
+            <option value="truth">真相类</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    UI.showPanel('添加属性', content, `
+      <button onclick="AttributePanel.createAttribute()">创建</button>
+    `);
+  },
+
+  async createAttribute() {
+    const name = document.getElementById('newAttrName').value;
+    const value = parseFloat(document.getElementById('newAttrValue').value);
+    const maxValue = parseFloat(document.getElementById('newAttrMax').value);
+    const category = document.getElementById('newAttrCategory').value;
+
+    if (!name) {
+      alert('请输入属性名称');
+      return;
+    }
+
+    try {
+      await API.post('/api/attributes', {
+        playthrough_id: DungeonStore.currentPlaythrough.id,
+        name,
+        initial_value: value,
+        max_value: maxValue,
+        category
+      });
+      UI.hidePanel();
+      this.render();
+    } catch (e) {
+      console.error('创建属性失败:', e);
+    }
+  }
+};
+
+/* ============================================
+ * 回忆系统组件
+ * ============================================ */
+const RecallSystem = {
+  container: null,
+
+  init() {
+    this.container = document.getElementById('recallPanel');
+    if (this.container) {
+      this.render();
+    }
+  },
+
+  async render() {
+    if (!DungeonStore.currentPlaythrough) {
+      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      return;
+    }
+
+    await DungeonStore.loadRecall(DungeonStore.currentPlaythrough.id);
+    await DungeonStore.loadDestinyMap();
+
+    const recall = DungeonStore.recallData;
+    const destiny = DungeonStore.destinyMap;
+
+    let html = `
+      <div class="recall-header">
+        <h3>回忆系统</h3>
+        <div class="recall-tabs">
+          <button class="tab-btn active" onclick="RecallSystem.switchTab('memories')">记忆</button>
+          <button class="tab-btn" onclick="RecallSystem.switchTab('endings')">结局</button>
+          <button class="tab-btn" onclick="RecallSystem.switchTab('destiny')">命运地图</button>
+        </div>
+      </div>
+      <div class="recall-content">
+        <div id="recall-memories" class="recall-tab active">
+          ${this.renderMemories(recall)}
+        </div>
+        <div id="recall-endings" class="recall-tab" style="display:none">
+          ${this.renderEndings(recall)}
+        </div>
+        <div id="recall-destiny" class="recall-tab" style="display:none">
+          ${this.renderDestinyMap(destiny)}
+        </div>
+      </div>
+    `;
+
+    this.container.innerHTML = html;
+  },
+
+  renderMemories(recall) {
+    if (!recall || !recall.memories) {
+      return '<div class="empty-state">暂无记忆</div>';
+    }
+
+    let html = '<div class="memories-list">';
+
+    for (const [type, memories] of Object.entries(recall.memories)) {
+      html += `
+        <div class="memory-group">
+          <h4>${this.getMemoryTypeName(type)}</h4>
+          ${memories.map(m => `
+            <div class="memory-item">
+              <div class="memory-content">${m.content}</div>
+              <div class="memory-meta">
+                <span class="memory-importance">重要性: ${(m.importance * 100).toFixed(0)}%</span>
+                <span class="memory-time">${new Date(m.discovered_at * 1000).toLocaleDateString()}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    return html;
+  },
+
+  renderEndings(recall) {
+    if (!recall || !recall.endings || recall.endings.length === 0) {
+      return '<div class="empty-state">暂无已解锁结局</div>';
+    }
+
+    let html = '<div class="endings-list">';
+
+    for (const ending of recall.endings) {
+      html += `
+        <div class="ending-item">
+          <div class="ending-name">${ending.name}</div>
+          <div class="ending-description">${ending.description || '暂无描述'}</div>
+          <div class="ending-time">解锁于: ${new Date(ending.unlocked_at * 1000).toLocaleDateString()}</div>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    return html;
+  },
+
+  renderDestinyMap(destiny) {
+    if (!destiny) {
+      return '<div class="empty-state">无法加载命运地图</div>';
+    }
+
+    let html = `
+      <div class="destiny-map">
+        <div class="destiny-summary">
+          <div class="stat">总周目: ${destiny.summary.total_playthroughs}</div>
+          <div class="stat">已完成: ${destiny.summary.completed_playthroughs}</div>
+          <div class="stat">已解锁结局: ${destiny.summary.unlocked_endings}</div>
+          <div class="stat">总记忆: ${destiny.summary.total_memories}</div>
+        </div>
+        <div class="destiny-playthroughs">
+          <h4>周目历史</h4>
+          ${destiny.playthroughs.map(pt => `
+            <div class="playthrough-item ${pt.status}">
+              <span class="pt-number">第${pt.number}周目</span>
+              <span class="pt-route">${pt.route || '默认路线'}</span>
+              <span class="pt-status">${pt.status === 'completed' ? '已完成' : pt.status === 'active' ? '进行中' : '已放弃'}</span>
+              ${pt.ending ? `<span class="pt-ending">结局: ${pt.ending}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    return html;
+  },
+
+  getMemoryTypeName(type) {
+    const typeMap = {
+      'memory': '📝 记忆',
+      'ending': '🎬 结局',
+      'achievement': '🏆 成就',
+      'discovery': '🔍 发现'
+    };
+    return typeMap[type] || type;
+  },
+
+  switchTab(tabName) {
+    // 更新标签状态
+    this.container.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // 切换内容
+    this.container.querySelectorAll('.recall-tab').forEach(tab => {
+      tab.style.display = 'none';
+    });
+    document.getElementById(`recall-${tabName}`).style.display = 'block';
+  }
+};
+
+/* ============================================
+ * 存档管理组件
+ * ============================================ */
+const SaveManager = {
+  container: null,
+
+  init() {
+    this.container = document.getElementById('savePanel');
+    if (this.container) {
+      this.render();
+    }
+  },
+
+  async render() {
+    if (!DungeonStore.currentPlaythrough) {
+      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      return;
+    }
+
+    await DungeonStore.loadSaves(DungeonStore.currentPlaythrough.id);
+
+    let html = `
+      <div class="save-header">
+        <h3>存档管理</h3>
+        <div class="save-actions">
+          <button class="btn-primary" onclick="SaveManager.createManualSave()">手动存档</button>
+          <button class="btn-secondary" onclick="SaveManager.exportAllSaves()">导出全部</button>
+        </div>
+      </div>
+      <div class="save-list">
+    `;
+
+    if (DungeonStore.saves.length === 0) {
+      html += '<div class="empty-state">暂无存档</div>';
+    } else {
+      for (const save of DungeonStore.saves) {
+        html += `
+          <div class="save-item" data-save-id="${save.id}">
+            <div class="save-icon">${save.save_type === 'auto' ? '📁' : '💾'}</div>
+            <div class="save-info">
+              <div class="save-name">${save.save_name}</div>
+              <div class="save-meta">
+                <span class="save-type">${save.save_type === 'auto' ? '自动存档' : '手动存档'}</span>
+                <span class="save-time">${new Date(save.created_at * 1000).toLocaleString()}</span>
+                <span class="save-size">${this.formatSize(save.file_size)}</span>
+              </div>
+            </div>
+            <div class="save-actions">
+              <button class="btn-small" onclick="SaveManager.loadSave('${save.id}')">加载</button>
+              <button class="btn-small" onclick="SaveManager.deleteSave('${save.id}')">删除</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    html += '</div>';
+    this.container.innerHTML = html;
+  },
+
+  formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  },
+
+  async createManualSave() {
+    const name = prompt('请输入存档名称:');
+    if (!name) return;
+
+    try {
+      // 收集当前游戏状态
+      const saveData = {
+        playthrough: DungeonStore.currentPlaythrough,
+        scenes: DungeonStore.scenes,
+        attributes: DungeonStore.attributes,
+        timestamp: Date.now()
+      };
+
+      await API.post('/api/saves', {
+        playthrough_id: DungeonStore.currentPlaythrough.id,
+        save_type: 'manual',
+        save_name: name,
+        save_data: saveData
+      });
+
+      this.render();
+    } catch (e) {
+      console.error('创建存档失败:', e);
+    }
+  },
+
+  async loadSave(saveId) {
+    if (!confirm('确定要加载此存档吗？当前进度将被覆盖。')) {
+      return;
+    }
+
+    try {
+      const saveData = await API.get(`/api/saves/${saveId}`);
+      console.log('加载存档:', saveData);
+      // TODO: 实现存档加载逻辑
+      alert('存档加载功能开发中');
+    } catch (e) {
+      console.error('加载存档失败:', e);
+    }
+  },
+
+  async deleteSave(saveId) {
+    if (!confirm('确定要删除此存档吗？')) {
+      return;
+    }
+
+    try {
+      await API.delete(`/api/saves/${saveId}`);
+      this.render();
+    } catch (e) {
+      console.error('删除存档失败:', e);
+    }
+  },
+
+  async exportAllSaves() {
+    try {
+      const saves = DungeonStore.saves;
+      const exportData = {
+        version: '1.0',
+        export_time: Date.now(),
+        saves: []
+      };
+
+      for (const save of saves) {
+        const exportResult = await API.post(`/api/saves/${save.id}/export`);
+        exportData.saves.push({
+          name: save.save_name,
+          data: exportResult.export_data
+        });
+      }
+
+      // 下载文件
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `saves_export_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('导出存档失败:', e);
+    }
+  }
+};
+
+/* ============================================
+ * 周目管理组件
+ * ============================================ */
+const PlaythroughManager = {
+  container: null,
+
+  init() {
+    this.container = document.getElementById('playthroughPanel');
+    if (this.container) {
+      this.render();
+    }
+  },
+
+  async render() {
+    await DungeonStore.loadPlaythroughs();
+
+    let html = `
+      <div class="playthrough-header">
+        <h3>周目管理</h3>
+        <button class="btn-primary" onclick="PlaythroughManager.createNew()">新周目</button>
+      </div>
+      <div class="playthrough-list">
+    `;
+
+    if (DungeonStore.playthroughs.length === 0) {
+      html += '<div class="empty-state">暂无周目记录</div>';
+    } else {
+      for (const pt of DungeonStore.playthroughs) {
+        const isActive = DungeonStore.currentPlaythrough && DungeonStore.currentPlaythrough.id === pt.id;
+        html += `
+          <div class="playthrough-item ${isActive ? 'active' : ''}" data-pt-id="${pt.id}">
+            <div class="pt-number">第${pt.number}周目</div>
+            <div class="pt-info">
+              <span class="pt-route">${pt.route || '默认路线'}</span>
+              <span class="pt-status ${pt.status}">${this.getStatusText(pt.status)}</span>
+              ${pt.ending ? `<span class="pt-ending">结局: ${pt.ending}</span>` : ''}
+            </div>
+            <div class="pt-time">${new Date(pt.started_at * 1000).toLocaleDateString()}</div>
+          </div>
+        `;
+      }
+    }
+
+    html += '</div>';
+    this.container.innerHTML = html;
+
+    // 绑定事件
+    this.bindEvents();
+  },
+
+  getStatusText(status) {
+    const statusMap = {
+      'active': '进行中',
+      'completed': '已完成',
+      'abandoned': '已放弃'
+    };
+    return statusMap[status] || status;
+  },
+
+  bindEvents() {
+    const items = this.container.querySelectorAll('.playthrough-item');
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        const ptId = item.dataset.ptId;
+        this.switchPlaythrough(ptId);
+      });
+    });
+  },
+
+  async createNew() {
+    const route = prompt('请输入路线名称（可选）:');
+    try {
+      const result = await API.post('/api/playthroughs', { route: route || null });
+      await DungeonStore.loadCurrentPlaythrough();
+      this.render();
+      SceneTimeline.render();
+      AttributePanel.render();
+    } catch (e) {
+      console.error('创建周目失败:', e);
+    }
+  },
+
+  async switchPlaythrough(ptId) {
+    // 切换当前周目
+    DungeonStore.currentPlaythrough = DungeonStore.playthroughs.find(pt => pt.id === ptId);
+    this.render();
+    SceneTimeline.render();
+    AttributePanel.render();
+    RecallSystem.render();
+    SaveManager.render();
+  }
+};
+
+/* ============================================
+ * UI工具函数
+ * ============================================ */
+const UI = {
+  showPanel(title, content, footer) {
+    const panel = document.getElementById('sidePanel');
+    const panelTitle = document.getElementById('panelTitle');
+    const panelContent = document.getElementById('panelContent');
+    const panelFooter = document.getElementById('panelFooter');
+
+    panelTitle.textContent = title;
+    panelContent.innerHTML = content;
+    panelFooter.innerHTML = footer;
+    panel.classList.add('visible');
+  },
+
+  hidePanel() {
+    const panel = document.getElementById('sidePanel');
+    panel.classList.remove('visible');
+  }
+};
+
+/* ============================================
+ * 初始化
+ * ============================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+  // 初始化副本工作流模块
+  await DungeonStore.init();
+
+  // 初始化各个组件
+  PlaythroughManager.init();
+  SceneTimeline.init();
+  AttributePanel.init();
+  RecallSystem.init();
+  SaveManager.init();
+});

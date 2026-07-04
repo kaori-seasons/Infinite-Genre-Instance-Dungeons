@@ -2,13 +2,16 @@
   --glass-bg: rgba(255, 255, 255, 0.65);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
-  --primary-color: #007aff;
-  --text-color: #1c1c1e;
-  --secondary-text: #8e8e93;
-  --danger-color: #ff3b30;
-  --success-color: #34c759;
+  --primary-color: #6C5CE7;
+  --primary-light: #A29BFE;
+  --text-color: #2D3436;
+  --secondary-text: #636E72;
+  --danger-color: #E17055;
+  --success-color: #00B894;
+  --success-light: #55EFC4;
   --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  --sidebar-width: 300px;
+  --sidebar-width: 280px;
+  --right-panel-width: 320px;
   --header-height: 60px;
   --radius-lg: 24px;
   --radius-md: 16px;
@@ -36,7 +39,7 @@ body {
 /* Layout */
 .app-container {
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr var(--right-panel-width);
   grid-template-rows: var(--header-height) 1fr;
   height: 100vh;
   width: 100vw;
@@ -98,12 +101,42 @@ body {
   grid-row: 2;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 #graph {
   width: 100%;
-  height: 100%;
+  flex: 1;
   background: transparent;
+}
+
+.main-section {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* Right Panel */
+.app-right-panel {
+  grid-row: 2;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-left: 1px solid var(--glass-border);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-section {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid rgba(255,255,255,0.5);
 }
 
 /* UI Components */
