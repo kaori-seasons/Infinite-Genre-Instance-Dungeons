@@ -359,7 +359,25 @@ pip install -r requirements-multimodal.txt
 
 ## Web 管理界面
 
-启用配置：
+### 界面预览
+
+**主界面 - 概念图谱与侧边栏**
+
+![主界面](./docs/screenshots/01_main_page.png)
+
+**记忆列表**
+
+![记忆列表](./docs/screenshots/02_memories_tab.png)
+
+**印象列表**
+
+![印象列表](./docs/screenshots/03_impressions_tab.png)
+
+**印象详情**
+
+![印象详情](./docs/screenshots/04_impression_detail.png)
+
+### 启用配置
 
 ```json
 {
@@ -393,6 +411,23 @@ http://127.0.0.1:6180
 ```text
 x-access-token: your-token
 ```
+
+### 快速启动（独立模式）
+
+如果想快速体验 Web 界面，可以使用独立启动脚本：
+
+```bash
+# 启动后端服务（包含测试数据）
+python3 start_backend.py
+
+# 访问 http://localhost:8352
+```
+
+该模式会自动创建 SQLite 数据库并填充测试数据，包含：
+- 6个概念：工作、学习、生活、健康、兴趣、社交
+- 12条记忆：各种生活场景
+- 7条连接：概念之间的关系
+- 5个印象：张经理、小明、小红等
 
 ---
 
