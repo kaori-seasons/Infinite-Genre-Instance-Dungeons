@@ -705,6 +705,179 @@
 }
 
 /* ============================================
+ * 场景详情面板
+ * ============================================ */
+.scene-detail {
+  padding: var(--space-sm);
+}
+
+.scene-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.scene-detail-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.scene-detail-icon.completed {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.scene-detail-icon.active {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.scene-detail-icon.locked {
+  background: var(--gray-200);
+  color: var(--gray-500);
+}
+
+.scene-detail-title h4 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.scene-detail-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.scene-detail-status {
+  margin-bottom: var(--space-lg);
+}
+
+.scene-detail-section {
+  margin-bottom: var(--space-lg);
+}
+
+.scene-detail-section label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+}
+
+.scene-detail-section p {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.scene-detail-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.scene-detail-progress .progress-bar {
+  flex: 1;
+}
+
+.scene-detail-progress-text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 40px;
+}
+
+.scene-detail-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.scene-detail-slider input[type="range"] {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  outline: none;
+}
+
+.scene-detail-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.scene-detail-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.scene-detail-slider span {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 40px;
+}
+
+/* ============================================
+ * 属性历史面板
+ * ============================================ */
+.attr-history {
+  padding: var(--space-sm);
+}
+
+.attr-history h4 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.history-time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.history-change {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.history-reason {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+/* ============================================
  * 响应式设计
  * ============================================ */
 @media (max-width: 1200px) {

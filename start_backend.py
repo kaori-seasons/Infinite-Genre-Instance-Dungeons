@@ -326,6 +326,15 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
                 "summary": {"total_scenes": total, "completed_scenes": completed, "active_scenes": total - completed, "progress": (completed / total * 100) if total > 0 else 0}
             })
 
+        elif path.startswith("/api/scenes/") and "timeline" not in path:
+            # 获取单个场景详情
+            scene_id = path.split("/")[-1]
+            scene = self.query_db("SELECT * FROM scenes WHERE id = ?", (scene_id,))
+            if scene:
+                self.send_json(scene[0])
+            else:
+                self.send_json({"error": "场景不存在"}, 404)
+
         elif path == "/api/scenes":
             pt_id = params.get("playthrough_id", [""])[0]
             if pt_id:

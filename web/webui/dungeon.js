@@ -207,7 +207,9 @@ const SceneTimeline = {
     sceneItems.forEach(item => {
       item.addEventListener('click', () => {
         const sceneId = item.dataset.sceneId;
-        this.showSceneDetail(sceneId);
+        if (sceneId) {
+          this.showSceneDetail(sceneId);
+        }
       });
     });
   },
@@ -215,33 +217,62 @@ const SceneTimeline = {
   async showSceneDetail(sceneId) {
     try {
       const scene = await API.get(`/api/scenes/${sceneId}`);
-      const events = await API.get(`/api/scenes/${sceneId}/events`);
+
+      const statusText = this.getStatusText(scene.status);
+      const statusIcon = scene.status === 'completed' ? '✓' :
+                        scene.status === 'active' ? '◐' : '○';
 
       const content = `
         <div class="scene-detail">
-          <h4>${scene.chapter} - ${scene.scene_number} ${scene.name}</h4>
-          <p class="description">${scene.description || '暂无描述'}</p>
-          <div class="scene-meta">
-            <span class="status ${scene.status}">${this.getStatusText(scene.status)}</span>
-            <span class="progress">进度: ${scene.progress}%</span>
+          <div class="scene-detail-header">
+            <span class="scene-detail-icon ${scene.status}">${statusIcon}</span>
+            <div class="scene-detail-title">
+              <h4>${scene.name}</h4>
+              <span class="scene-detail-subtitle">${scene.chapter} · ${scene.scene_number}</span>
+            </div>
           </div>
-          <div class="scene-events">
-            <h5>场景事件</h5>
-            <div class="events-list">
-              ${(events.events || []).map(e => `
-                <div class="event-item">
-                  <span class="event-type">${e.event_type}</span>
-                  <span class="event-content">${e.event_content}</span>
-                </div>
-              `).join('')}
+
+          <div class="scene-detail-status">
+            <span class="badge badge-${scene.status === 'completed' ? 'success' : scene.status === 'active' ? 'info' : 'gray'}">
+              ${statusText}
+            </span>
+          </div>
+
+          ${scene.description ? `
+            <div class="scene-detail-section">
+              <label>场景描述</label>
+              <p>${scene.description}</p>
+            </div>
+          ` : ''}
+
+          <div class="scene-detail-section">
+            <label>进度</label>
+            <div class="scene-detail-progress">
+              <div class="progress-bar">
+                <div class="progress-fill ${scene.status === 'completed' ? 'success' : ''}"
+                     style="width: ${scene.progress}%"></div>
+              </div>
+              <span class="scene-detail-progress-text">${scene.progress}%</span>
+            </div>
+          </div>
+
+          <div class="scene-detail-section">
+            <label>更新进度</label>
+            <div class="scene-detail-slider">
+              <input type="range" id="sceneProgressSlider" min="0" max="100" value="${scene.progress}"
+                     oninput="document.getElementById('sceneProgressValue').textContent = this.value + '%'">
+              <span id="sceneProgressValue">${scene.progress}%</span>
             </div>
           </div>
         </div>
       `;
 
-      DungeonUI.showPanel(`场景详情`, content, `
-        <button onclick="SceneTimeline.completeScene('${sceneId}')">完成场景</button>
-      `);
+      const footer = scene.status === 'completed' ? '' : `
+        <button class="btn-secondary" onclick="SceneTimeline.updateProgress('${sceneId}')">更新进度</button>
+        ${scene.status !== 'completed' ? `<button class="btn-primary" onclick="SceneTimeline.completeScene('${sceneId}')">完成场景</button>` : ''}
+      `;
+
+      DungeonUI.showPanel(`场景详情`, content, footer);
     } catch (e) {
       console.error('获取场景详情失败:', e);
     }
@@ -263,6 +294,18 @@ const SceneTimeline = {
       this.render();
     } catch (e) {
       console.error('完成场景失败:', e);
+    }
+  },
+
+  async updateProgress(sceneId) {
+    try {
+      const slider = document.getElementById('sceneProgressSlider');
+      const progress = parseInt(slider.value);
+      await API.put(`/api/scenes/${sceneId}/progress`, { progress });
+      DungeonUI.hidePanel();
+      this.render();
+    } catch (e) {
+      console.error('更新进度失败:', e);
     }
   }
 };
