@@ -389,6 +389,40 @@ pip install -r requirements-multimodal.txt
 
 ### 界面预览
 
+#### 副本工作流
+
+**场景时间线 - 按章节分组显示场景进度**
+
+![场景时间线](./docs/screenshots/e2e/phase2_scene_timeline.png)
+
+**场景详情 - 点击场景查看详细信息和进度**
+
+![场景详情](./docs/screenshots/phase5/scene_detail_panel.png)
+
+**属性面板 - 追踪角色属性变化**
+
+![属性面板](./docs/screenshots/e2e/phase2_scene_timeline.png)
+
+**回忆系统 - 跨周目记忆和结局追踪**
+
+![回忆系统](./docs/screenshots/e2e/02_workflow_tab.png)
+
+#### 响应式设计
+
+**桌面端 - 三栏布局**
+
+![桌面端](./docs/screenshots/responsive/phase4_desktop.png)
+
+**平板端 - 两栏布局**
+
+![平板端](./docs/screenshots/responsive/phase4_tablet.png)
+
+**移动端 - 单栏布局**
+
+![移动端](./docs/screenshots/responsive/phase4_mobile.png)
+
+#### 基础功能
+
 **主界面 - 概念图谱与侧边栏**
 
 ![主界面](./docs/screenshots/01_main_page.png)
