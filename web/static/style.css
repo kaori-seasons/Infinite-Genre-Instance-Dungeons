@@ -566,6 +566,97 @@ input::placeholder, textarea::placeholder {
 }
 
 /* ============================================
+ * 响应式设计
+ * ============================================ */
+@media (max-width: 1200px) {
+  .app-container {
+    grid-template-columns: var(--sidebar-width) 1fr;
+  }
+
+  .app-right-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--header-height) auto 1fr;
+  }
+
+  .app-header {
+    padding: 0 var(--space-md);
+  }
+
+  .search-bar {
+    max-width: 200px;
+    margin: 0 var(--space-sm);
+  }
+
+  .app-sidebar {
+    grid-column: 1;
+    grid-row: 2;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .app-main {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+  }
+
+  .tab-btn {
+    white-space: nowrap;
+    flex: none;
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .floating-panel {
+    width: 100%;
+    right: -100%;
+  }
+}
+
+/* ============================================
+ * 动画效果
+ * ============================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* ============================================
  * Floating Panel
  * ============================================ */
 .floating-panel {

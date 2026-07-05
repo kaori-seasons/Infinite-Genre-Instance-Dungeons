@@ -715,18 +715,263 @@
   .app-right-panel {
     display: none;
   }
+
+  .attributes-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
   .app-container {
     grid-template-columns: 1fr;
+    grid-template-rows: var(--header-height) auto 1fr;
   }
 
   .app-sidebar {
-    display: none;
+    grid-column: 1;
+    grid-row: 2;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    max-height: 200px;
+    overflow-y: auto;
   }
 
   .app-main {
     grid-column: 1;
+    grid-row: 3;
   }
+
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .tab-btn {
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .timeline-stats {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .chapter-scenes {
+    padding-left: var(--space-sm);
+  }
+}
+
+/* ============================================
+ * 动画效果
+ * ============================================ */
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 滑入动画 */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 缩放动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 应用动画 */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* 场景卡片悬停效果 */
+.scene-item {
+  transition: all 0.2s ease;
+}
+
+.scene-item:hover {
+  transform: translateX(4px);
+}
+
+/* 属性卡片悬停效果 */
+.attribute-card {
+  transition: all 0.2s ease;
+}
+
+.attribute-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 存档卡片悬停效果 */
+.save-item {
+  transition: all 0.2s ease;
+}
+
+.save-item:hover {
+  transform: translateX(4px);
+}
+
+/* 按钮悬停效果 */
+.btn-primary,
+.btn-secondary,
+.btn-add {
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+}
+
+/* 标签页切换动画 */
+.tab-btn {
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  transform: scale(1.02);
+}
+
+/* 进度条动画 */
+.progress-fill {
+  transition: width 0.5s ease-out;
+}
+
+/* 章节折叠动画 */
+.chapter-scenes {
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+}
+
+/* 浮动面板动画 */
+.floating-panel {
+  transition: right 0.3s ease, opacity 0.3s ease;
+}
+
+.floating-panel.visible {
+  opacity: 1;
+}
+
+/* 空状态动画 */
+.empty-state {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.empty-state-icon {
+  animation: pulse 2s infinite;
+}
+
+/* 加载状态 */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* 成功状态动画 */
+@keyframes successPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(129, 199, 132, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(129, 199, 132, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(129, 199, 132, 0);
+  }
+}
+
+.scene-item.completed {
+  animation: successPulse 2s ease-out;
+}
+
+/* 数值变化动画 */
+@keyframes valueChange {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    color: var(--primary);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.attr-value.changed {
+  animation: valueChange 0.3s ease-out;
 }
