@@ -49,7 +49,19 @@ const DungeonStore = {
   async loadAttributes(playthroughId) {
     try {
       const data = await API.get(`/api/attributes?playthrough_id=${playthroughId}`);
-      this.attributes = data.attributes || [];
+      // 映射字段名以匹配前端期望
+      this.attributes = (data.attributes || []).map(attr => ({
+        id: attr.id,
+        name: attr.attribute_name,
+        value: attr.attribute_value,
+        max_value: attr.max_value,
+        min_value: attr.min_value,
+        category: attr.category,
+        icon: attr.icon,
+        percentage: attr.max_value > attr.min_value
+          ? ((attr.attribute_value - attr.min_value) / (attr.max_value - attr.min_value)) * 100
+          : 0
+      }));
     } catch (e) {
       this.attributes = [];
     }
@@ -269,7 +281,12 @@ const AttributePanel = {
     if (!this.container) return;
 
     if (!DungeonStore.currentPlaythrough) {
-      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      this.container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📊</div>
+          <div class="empty-state-text">没有活跃的周目</div>
+        </div>
+      `;
       return;
     }
 
@@ -278,29 +295,43 @@ const AttributePanel = {
     let html = `
       <div class="panel-header">
         <h3>属性面板</h3>
-        <button class="btn-add" onclick="AttributePanel.showAddAttribute()">+ 添加属性</button>
+        <button class="btn-add" onclick="AttributePanel.showAddAttribute()">
+          <span>+</span> 添加
+        </button>
       </div>
       <div class="attributes-grid">
     `;
 
-    for (const attr of DungeonStore.attributes) {
+    if (DungeonStore.attributes.length === 0) {
       html += `
-        <div class="attribute-card" data-attr-id="${attr.id}">
-          <div class="attr-icon">${attr.icon || '📊'}</div>
-          <div class="attr-info">
-            <div class="attr-name">${attr.name}</div>
-            <div class="attr-value">${attr.value.toFixed(1)}</div>
-            <div class="attr-bar">
-              <div class="attr-fill" style="width: ${attr.percentage}%"></div>
-            </div>
-            <div class="attr-range">${attr.min_value} - ${attr.max_value}</div>
-          </div>
-          <div class="attr-actions">
-            <button class="btn-small" onclick="AttributePanel.adjustValue('${attr.id}', -10)">-</button>
-            <button class="btn-small" onclick="AttributePanel.adjustValue('${attr.id}', 10)">+</button>
-          </div>
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state-text">暂无属性</div>
         </div>
       `;
+    } else {
+      for (const attr of DungeonStore.attributes) {
+        const percentage = attr.percentage || 0;
+        html += `
+          <div class="attribute-card" data-attr-id="${attr.id}">
+            <div class="attr-header">
+              <span class="attr-icon">${attr.icon || '📊'}</span>
+              <span class="attr-name">${attr.name}</span>
+            </div>
+            <div class="attr-value">${Math.round(attr.value)}</div>
+            <div class="attr-bar">
+              <div class="attr-fill" style="width: ${percentage}%"></div>
+            </div>
+            <div class="attr-range">
+              <span>${attr.min_value}</span>
+              <span>${attr.max_value}</span>
+            </div>
+            <div class="attr-actions">
+              <button class="btn-icon btn-minus" onclick="AttributePanel.adjustValue('${attr.id}', -10)">-</button>
+              <button class="btn-icon btn-plus" onclick="AttributePanel.adjustValue('${attr.id}', 10)">+</button>
+            </div>
+          </div>
+        `;
+      }
     }
 
     html += '</div>';
@@ -431,7 +462,12 @@ const RecallSystem = {
     if (!this.container) return;
 
     if (!DungeonStore.currentPlaythrough) {
-      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      this.container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔮</div>
+          <div class="empty-state-text">没有活跃的周目</div>
+        </div>
+      `;
       return;
     }
 
@@ -445,19 +481,19 @@ const RecallSystem = {
       <div class="recall-header">
         <h3>回忆系统</h3>
         <div class="recall-tabs">
-          <button class="tab-btn active" onclick="RecallSystem.switchTab('memories')">记忆</button>
-          <button class="tab-btn" onclick="RecallSystem.switchTab('endings')">结局</button>
-          <button class="tab-btn" onclick="RecallSystem.switchTab('destiny')">命运地图</button>
+          <button class="tab-btn active" data-tab="memories" onclick="RecallSystem.switchTab('memories')">记忆</button>
+          <button class="tab-btn" data-tab="endings" onclick="RecallSystem.switchTab('endings')">结局</button>
+          <button class="tab-btn" data-tab="destiny" onclick="RecallSystem.switchTab('destiny')">命运</button>
         </div>
       </div>
       <div class="recall-content">
         <div id="recall-memories" class="recall-tab active">
           ${this.renderMemories(recall)}
         </div>
-        <div id="recall-endings" class="recall-tab" style="display:none">
+        <div id="recall-endings" class="recall-tab">
           ${this.renderEndings(recall)}
         </div>
-        <div id="recall-destiny" class="recall-tab" style="display:none">
+        <div id="recall-destiny" class="recall-tab">
           ${this.renderDestinyMap(destiny)}
         </div>
       </div>
@@ -584,7 +620,12 @@ const SaveManager = {
     if (!this.container) return;
 
     if (!DungeonStore.currentPlaythrough) {
-      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      this.container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">💾</div>
+          <div class="empty-state-text">没有活跃的周目</div>
+        </div>
+      `;
       return;
     }
 
@@ -593,32 +634,48 @@ const SaveManager = {
     let html = `
       <div class="save-header">
         <h3>存档管理</h3>
-        <div class="save-actions">
-          <button class="btn-primary" onclick="SaveManager.createManualSave()">手动存档</button>
-          <button class="btn-secondary" onclick="SaveManager.exportAllSaves()">导出全部</button>
-        </div>
+      </div>
+      <div class="save-actions-bar">
+        <button class="btn-primary" onclick="SaveManager.createManualSave()">
+          <span>💾</span> 手动存档
+        </button>
+        <button class="btn-secondary" onclick="SaveManager.exportAllSaves()">
+          <span>📤</span> 导出
+        </button>
       </div>
       <div class="save-list">
     `;
 
     if (DungeonStore.saves.length === 0) {
-      html += '<div class="empty-state">暂无存档</div>';
+      html += `
+        <div class="empty-state">
+          <div class="empty-state-text">暂无存档</div>
+        </div>
+      `;
     } else {
       for (const save of DungeonStore.saves) {
+        const isAuto = save.save_type === 'auto';
+        const icon = isAuto ? '📁' : '💾';
+        const typeName = isAuto ? '自动存档' : '手动存档';
+        const time = new Date(save.created_at * 1000).toLocaleString('zh-CN', {
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
         html += `
           <div class="save-item" data-save-id="${save.id}">
-            <div class="save-icon">${save.save_type === 'auto' ? '📁' : '💾'}</div>
+            <div class="save-icon">${icon}</div>
             <div class="save-info">
-              <div class="save-name">${save.save_name}</div>
+              <div class="save-name">${save.save_name || typeName}</div>
               <div class="save-meta">
-                <span class="save-type">${save.save_type === 'auto' ? '自动存档' : '手动存档'}</span>
-                <span class="save-time">${new Date(save.created_at * 1000).toLocaleString()}</span>
-                <span class="save-size">${this.formatSize(save.file_size)}</span>
+                <span>${time}</span>
               </div>
             </div>
-            <div class="save-actions">
-              <button class="btn-small" onclick="SaveManager.loadSave('${save.id}')">加载</button>
-              <button class="btn-small" onclick="SaveManager.deleteSave('${save.id}')">删除</button>
+            <div class="save-item-actions">
+              <button class="btn-small btn-secondary" onclick="SaveManager.loadSave('${save.id}')">加载</button>
+              <button class="btn-small btn-danger" onclick="SaveManager.deleteSave('${save.id}')">删除</button>
             </div>
           </div>
         `;
