@@ -1,188 +1,155 @@
-/**
- * 副本工作流样式
- * 场景时间线、属性面板、回忆系统、存档管理
- */
-
 /* ============================================
- * 颜色变量
+ * 副本工作流样式 - 简约静谧风格
  * ============================================ */
-:root {
-  --primary-color: #6C5CE7;
-  --primary-light: #A29BFE;
-  --success-color: #00B894;
-  --success-light: #55EFC4;
-  --warning-color: #FDCB6E;
-  --danger-color: #E17055;
-  --text-primary: #2D3436;
-  --text-secondary: #636E72;
-  --bg-primary: #FAFAFA;
-  --bg-secondary: #FFFFFF;
-  --border-color: #DFE6E9;
-}
-
-/* ============================================
- * 通用组件
- * ============================================ */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.btn-primary {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: var(--primary-light);
-}
-
-.btn-secondary {
-  background: var(--border-color);
-  color: var(--text-primary);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
-}
-
-.btn-secondary:hover {
-  background: #B2BEC3;
-}
-
-.btn-small {
-  background: var(--border-color);
-  color: var(--text-primary);
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 11px;
-  transition: background 0.2s;
-}
-
-.btn-small:hover {
-  background: #B2BEC3;
-}
 
 /* ============================================
  * 场景时间线
  * ============================================ */
 .timeline-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
 }
 
 .timeline-header h3 {
-  margin: 0;
-  font-size: 16px;
+  font-size: var(--text-base);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .timeline-stats {
   display: flex;
-  gap: 12px;
-  font-size: 12px;
+  gap: var(--space-md);
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
+.timeline-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
 .timeline-stats .completed {
-  color: var(--success-color);
+  color: var(--success);
 }
 
 .timeline-stats .active {
-  color: var(--primary-color);
+  color: var(--info);
 }
 
 .timeline-progress {
   height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
-  margin-bottom: 20px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-lg);
   overflow: hidden;
 }
 
-.progress-bar {
+.timeline-progress .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--success-color), var(--success-light));
+  background: var(--primary);
+  border-radius: var(--radius-full);
   transition: width 0.3s ease;
 }
 
+/* 章节分组 */
 .chapter-group {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .chapter-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: var(--border-color);
-  border-radius: 6px;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chapter-header:hover {
+  background: var(--gray-200);
 }
 
 .chapter-name {
   font-weight: 600;
+  font-size: var(--text-sm);
   color: var(--text-primary);
 }
 
 .chapter-stats {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
 .chapter-scenes {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
+  padding-left: var(--space-md);
 }
 
+/* 场景卡片 */
 .scene-item {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .scene-item:hover {
-  border-color: var(--primary-color);
-  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.1);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .scene-item.completed {
-  border-left: 3px solid var(--success-color);
+  border-left: 3px solid var(--success);
 }
 
 .scene-item.active {
-  border-left: 3px solid var(--primary-color);
-  background: rgba(108, 92, 231, 0.05);
+  border-left: 3px solid var(--info);
+  background: var(--info-bg);
 }
 
 .scene-item.locked {
   opacity: 0.6;
 }
 
+.scene-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.scene-icon.completed {
+  color: var(--success);
+}
+
+.scene-icon.active {
+  color: var(--info);
+}
+
+.scene-icon.locked {
+  color: var(--gray-400);
+}
+
 .scene-number {
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-right: 12px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--primary);
+  margin-right: var(--space-sm);
   min-width: 40px;
 }
 
@@ -193,25 +160,127 @@
 .scene-name {
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+.scene-meta {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 .scene-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 80px;
+}
+
+.scene-progress .progress-bar {
+  flex: 1;
   height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
-  overflow: hidden;
 }
 
-.progress-mini {
-  height: 100%;
-  background: var(--success-color);
-  transition: width 0.3s ease;
+.scene-progress-text {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  min-width: 30px;
+  text-align: right;
 }
 
-.scene-status {
-  font-size: 14px;
-  margin-left: 12px;
+/* ============================================
+ * 周目管理
+ * ============================================ */
+.playthrough-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.playthrough-header h3 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.playthrough-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.playthrough-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playthrough-item:hover {
+  border-color: var(--primary);
+}
+
+.playthrough-item.active {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+
+.pt-number {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--primary);
+  margin-right: var(--space-sm);
+  min-width: 60px;
+}
+
+.pt-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pt-route {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.pt-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--space-xs);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.pt-status.active {
+  background: var(--info-bg);
+  color: #1565C0;
+}
+
+.pt-status.completed {
+  background: var(--success-bg);
+  color: #2E7D32;
+}
+
+.pt-status.abandoned {
+  background: var(--gray-200);
+  color: var(--text-secondary);
+}
+
+.pt-ending {
+  font-size: var(--text-xs);
+  color: var(--success);
+}
+
+.pt-time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
 /* ============================================
@@ -219,57 +288,60 @@
  * ============================================ */
 .panel-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
 }
 
 .panel-header h3 {
-  margin: 0;
-  font-size: 16px;
+  font-size: var(--text-base);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .btn-add {
-  background: var(--success-color);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--success);
   color: white;
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 500;
   cursor: pointer;
-  font-size: 12px;
   transition: background 0.2s;
 }
 
 .btn-add:hover {
-  background: #00CEC9;
+  background: #66BB6A;
 }
 
 .attributes-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .attribute-card {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .attribute-card:hover {
-  border-color: var(--primary-color);
-  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.1);
+  border-color: var(--primary);
 }
 
 .attr-icon {
-  font-size: 24px;
-  margin-right: 12px;
+  font-size: 20px;
+  margin-right: var(--space-sm);
 }
 
 .attr-info {
@@ -277,81 +349,85 @@
 }
 
 .attr-name {
+  font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--text-primary);
-  font-size: 13px;
-  margin-bottom: 4px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
 }
 
 .attr-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--primary);
   margin-bottom: 4px;
 }
 
 .attr-bar {
   height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .attr-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  background: var(--primary);
+  border-radius: var(--radius-full);
   transition: width 0.3s ease;
 }
 
 .attr-range {
   font-size: 10px;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 .attr-actions {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-left: 8px;
+  gap: 2px;
+  margin-left: var(--space-sm);
 }
 
 /* ============================================
  * 回忆系统
  * ============================================ */
 .recall-header {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 
 .recall-header h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
+  font-size: var(--text-base);
+  font-weight: 600;
   color: var(--text-primary);
+  margin-bottom: var(--space-sm);
 }
 
 .recall-tabs {
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .tab-btn {
   flex: 1;
-  padding: 8px;
-  background: var(--border-color);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--gray-100);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
   transition: all 0.2s;
 }
 
 .tab-btn.active {
-  background: var(--primary-color);
+  background: var(--primary);
   color: white;
 }
 
 .recall-content {
-  min-height: 300px;
+  min-height: 200px;
 }
 
 .recall-tab {
@@ -362,143 +438,91 @@
   display: block;
 }
 
+/* 记忆列表 */
 .memory-group {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 
 .memory-group h4 {
-  margin: 0 0 8px 0;
-  font-size: 13px;
+  font-size: var(--text-xs);
+  font-weight: 500;
   color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
 }
 
 .memory-item {
-  padding: 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  margin-bottom: 8px;
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
 }
 
 .memory-content {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-xs);
 }
 
 .memory-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
+/* 结局列表 */
 .ending-item {
-  padding: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  margin-bottom: 12px;
-  border-left: 3px solid var(--success-color);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  border-left: 3px solid var(--success);
 }
 
 .ending-name {
   font-weight: 600;
+  font-size: var(--text-sm);
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-xs);
 }
 
 .ending-description {
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-xs);
 }
 
 .ending-time {
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: 10px;
+  color: var(--text-tertiary);
 }
 
+/* 命运地图 */
 .destiny-summary {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
 .destiny-summary .stat {
-  padding: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   text-align: center;
-  font-size: 13px;
-  color: var(--text-primary);
 }
 
-.destiny-playthroughs h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--text-primary);
-}
-
-.playthrough-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-.playthrough-item.active {
-  border-color: var(--primary-color);
-  background: rgba(108, 92, 231, 0.05);
-}
-
-.pt-number {
+.destiny-summary .stat-value {
+  font-size: var(--text-lg);
   font-weight: 600;
-  color: var(--primary-color);
-  margin-right: 12px;
+  color: var(--primary);
 }
 
-.pt-info {
-  flex: 1;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.pt-route {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.pt-status {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--border-color);
-}
-
-.pt-status.active {
-  background: var(--primary-color);
-  color: white;
-}
-
-.pt-status.completed {
-  background: var(--success-color);
-  color: white;
-}
-
-.pt-ending {
-  font-size: 11px;
-  color: var(--success-color);
-}
-
-.pt-time {
-  font-size: 11px;
+.destiny-summary .stat-label {
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
@@ -507,45 +531,45 @@
  * ============================================ */
 .save-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
 }
 
 .save-header h3 {
-  margin: 0;
-  font-size: 16px;
+  font-size: var(--text-base);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .save-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .save-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .save-item {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   transition: all 0.2s;
 }
 
 .save-item:hover {
-  border-color: var(--primary-color);
+  border-color: var(--primary);
 }
 
 .save-icon {
-  font-size: 24px;
-  margin-right: 12px;
+  font-size: 20px;
+  margin-right: var(--space-sm);
 }
 
 .save-info {
@@ -554,66 +578,79 @@
 
 .save-name {
   font-weight: 500;
+  font-size: var(--text-sm);
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .save-meta {
   display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--text-secondary);
+  gap: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
 .save-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 /* ============================================
  * 表单样式
  * ============================================ */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 
 .form-group label {
   display: block;
-  font-size: 13px;
+  font-size: var(--text-xs);
+  font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-xs);
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 13px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   transition: border-color 0.2s;
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--primary);
 }
 
 /* ============================================
  * 响应式设计
  * ============================================ */
-@media (max-width: 768px) {
-  .attributes-grid {
+@media (max-width: 1200px) {
+  .app-container {
+    grid-template-columns: var(--sidebar-width) 1fr;
+  }
+
+  .app-right-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-container {
     grid-template-columns: 1fr;
   }
 
-  .destiny-summary {
-    grid-template-columns: 1fr;
+  .app-sidebar {
+    display: none;
   }
 
-  .timeline-stats {
-    flex-direction: column;
-    gap: 4px;
+  .app-main {
+    grid-column: 1;
   }
 }
