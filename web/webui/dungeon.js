@@ -95,7 +95,12 @@ const SceneTimeline = {
     if (!this.container) return;
 
     if (!DungeonStore.currentPlaythrough) {
-      this.container.innerHTML = '<div class="empty-state">没有活跃的周目</div>';
+      this.container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <div class="empty-state-text">没有活跃的周目</div>
+        </div>
+      `;
       return;
     }
 
@@ -107,23 +112,42 @@ const SceneTimeline = {
       <div class="timeline-header">
         <h3>场景时间线</h3>
         <div class="timeline-stats">
-          <span class="stat">总场景: ${timeline.summary.total_scenes}</span>
-          <span class="stat completed">已完成: ${timeline.summary.completed_scenes}</span>
-          <span class="stat active">进行中: ${timeline.summary.active_scenes}</span>
+          <span class="stat">
+            <span class="stat-label">总场景</span>
+            <span class="stat-value">${timeline.summary.total_scenes}</span>
+          </span>
+          <span class="stat completed">
+            <span class="stat-label">已完成</span>
+            <span class="stat-value">${timeline.summary.completed_scenes}</span>
+          </span>
+          <span class="stat active">
+            <span class="stat-label">进行中</span>
+            <span class="stat-value">${timeline.summary.active_scenes}</span>
+          </span>
         </div>
       </div>
       <div class="timeline-progress">
-        <div class="progress-bar" style="width: ${timeline.summary.progress}%"></div>
+        <div class="progress-fill" style="width: ${timeline.summary.progress}%"></div>
       </div>
       <div class="timeline-chapters">
     `;
 
     for (const chapter of timeline.chapters) {
+      const progress = chapter.total_scenes > 0
+        ? Math.round((chapter.completed_scenes / chapter.total_scenes) * 100)
+        : 0;
+
       html += `
         <div class="chapter-group">
           <div class="chapter-header">
-            <span class="chapter-name">${chapter.chapter_name}</span>
-            <span class="chapter-stats">${chapter.completed_scenes}/${chapter.total_scenes}</span>
+            <div class="chapter-header-left">
+              <span class="chapter-icon">📖</span>
+              <span class="chapter-name">${chapter.chapter_name}</span>
+            </div>
+            <div class="chapter-header-right">
+              <span class="chapter-progress-text">${chapter.completed_scenes}/${chapter.total_scenes}</span>
+              <span class="chapter-arrow">▼</span>
+            </div>
           </div>
           <div class="chapter-scenes">
       `;
@@ -131,17 +155,23 @@ const SceneTimeline = {
       for (const scene of chapter.scenes) {
         const statusClass = scene.status === 'completed' ? 'completed' :
                            scene.status === 'active' ? 'active' : 'locked';
+
+        const statusIcon = scene.status === 'completed' ? '✓' :
+                          scene.status === 'active' ? '◐' : '○';
+
         html += `
           <div class="scene-item ${statusClass}" data-scene-id="${scene.id}">
+            <div class="scene-icon ${statusClass}">${statusIcon}</div>
             <div class="scene-number">${scene.scene_number}</div>
             <div class="scene-info">
               <div class="scene-name">${scene.name}</div>
-              <div class="scene-progress">
-                <div class="progress-mini" style="width: ${scene.progress}%"></div>
-              </div>
             </div>
-            <div class="scene-status">
-              ${scene.status === 'completed' ? '✓' : scene.status === 'active' ? '▶' : '🔒'}
+            <div class="scene-progress">
+              <div class="progress-bar">
+                <div class="progress-fill ${scene.status === 'completed' ? 'success' : ''}"
+                     style="width: ${scene.progress}%"></div>
+              </div>
+              <span class="scene-progress-text">${scene.progress}%</span>
             </div>
           </div>
         `;
